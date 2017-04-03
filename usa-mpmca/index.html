@@ -1,201 +1,508 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-
+﻿<!DOCTYPE html>
+<html>
 <head>
-	<title>Hello world</title>
-    <link href="/_System/apps/usa-mpmca/_assets/css/app.css" type="text/css" rel="stylesheet" media="screen" />
-    <link href="/_System/apps/usa-mpmca/_assets/css/bootstrap.css" type="text/css" rel="stylesheet" media="screen" />
-
-    <script type="text/javascript" src="//code.jquery.com/jquery-1.10.2.min.js"></script>
-    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.3.1/jquery.cookie.min.js"></script>
-    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min.js"></script>
-    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.0.0/backbone-min.js"></script>
-    <script type="text/javascript" src="//cdn.worldsecuresystems.com/bcapi/bcapi-0.1.0.min.js"></script>
-    <script type="text/javascript" src="/_System/apps/usa-mpmca/_assets/js/app.js"></script>
-
-    <meta name="robots" content="noindex">
-
-</head>
-
-<body>
-	<html>
-<head>
-<title>2012 Code Update Purchase Form</title>
-
-
+    <title>PayJS PHP Samples</title>
+    <!-- Libraries -->
+    <link href="shared/css/bootstrap.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js" crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular-route.js"></script>
+    <!-- PayJS -->
+    <script type="text/javascript" src="https://www.sagepayments.net/pay/1.0.1/js/pay.min.js"></script>
 </head>
 <body>
-        <script type="text/javascript" src="/CatalystScripts/ValidationFunctions.js?vs=b2272.r506604-phase1"></script>
-        <form name="catwebformform22149" method="post" onsubmit="return checkWholeForm22149(this)" enctype="multipart/form-data" action="https://mpmca.worldsecuresystems.com/FormProcessv2.aspx?WebFormID=166596&amp;OID={module_oid}&amp;OTYPE={module_otype}&amp;EID={module_eid}&amp;CID={module_cid}&amp;CC={module_urlcountrycode}&amp;Referrer={module_siteurl,true,true}">
-          <div class="row">
-            <div class="large-6 columns">
-              <h1>Contact Information</h1>
+    <header class="header">
+        <div class="header-global">
+        </div>
+        <div class="header-secondary">
+            <div class="wrapper">
+                <a href="/" class="logo-product-rev"><img src="shared/img/logo_sage.png" alt="Sage" width="57" height="22"></a>
+                <a href="/" class="logo-product"><img src="shared/img/logo-sage-paymentsjs-white-@1x.png" alt="Sage" ></a>
+                <nav class="nav-secondary">
+                    <ul>
+                        <li><a href="#/" class="menu-item">Home</a></li>
+                        <li><a href="#/modal" class="menu-item">Modal</a></li>
+                        <li><a href="#/inline" class="menu-item">Inline</a></li>
+                        <li><a href="#/require" class="menu-item">RequireJS</a></li>
+                        <li><a href="#/dynamic" class="menu-item">Dynamic</a></li>
+                        <li><a href="#/js-only" class="menu-item">JS-Only</a></li>
+                        <li><a href="#/adaptive" class="menu-item">Adaptive</a></li>
+                        <li><a href="#/vault" class="menu-item">Tokens</a></li>
+                        <li><a href="#/response" class="menu-item">Responses</a></li>
+                        <li><a href="https://github.com/SagePayments/PaymentsJS" class="menu-item">Documentation</a></li>
+                    </ul>
+                </nav>
             </div>
-            <div class="large-6 columns">
-              <div>
-                <label for="FirstName">First Name <span class="req">*</span> </label>
-                <br />
-                <input type="text" name="FirstName" id="FirstName" class="cat_textbox" maxlength="255">
-              </div>
-              <div>
-                <label for="LastName">Last Name <span class="req">*</span> </label>
-                <br />
-                <input type="text" name="LastName" id="LastName" class="cat_textbox" maxlength="255">
-              </div>
-              <div>
-                <label for="Company">Company</label>
-                <br />
-                <input type="text" name="Company" id="Company" class="cat_textbox" maxlength="255">
-              </div>
-              <div>
-                <label for="EmailAddress">Email Address <span class="req">*</span> </label>
-                <br />
-                <input type="text" name="EmailAddress" id="EmailAddress" class="cat_textbox" maxlength="255">
-              </div>
-              <div>
-                <label for="WorkPhone">Work Phone Number</label>
-                <br />
-                <input type="text" name="WorkPhone" id="WorkPhone" class="cat_textbox" maxlength="255">
-              </div>
+        </div>
+    </header>
+
+    <main class="main-body" style="height:100%;" ng-app="PayJS_SamplesApp">
+        <div class="wrapper" ng-view></div>
+
+    </main>
+    <?php
+        require('../shared/shared.php');
+
+        $nonces = getNonces();
+
+        $req = [
+            "merchantId" => $merchant['ID'],
+            "merchantKey" => $merchant['KEY'], // don't include the Merchant Key in the JavaScript initialization!
+            "requestType" => "payment",
+            "orderNumber" => "Invoice" . rand(0, 1000),
+            "amount" => $request['amount'],
+            "salt" => $nonces['salt'],
+            "postbackUrl" => $request['postbackUrl'],
+            "preAuth" => $request['preAuth']
+        ];
+
+        $authKey = getAuthKey(json_encode($req), $developer['KEY'], $nonces['salt'], $nonces['iv']);
+    ?>
+
+    <style>
+        #paymentResponse.alert{
+            background-color: #3c424f;
+            color: white;
+            opacity: 0;
+        }
+        .form-control{
+            width: 50%;
+        }
+        #customFormWrapper{
+            padding: 15px;
+        }
+        #customFormWrapper.static{
+            background: repeating-linear-gradient(
+              -45deg,
+              #3c424f,
+              #3c424f 10px,
+              #f5f5f5 10px,
+              #f5f5f5 20px
+            );
+        }
+        #customFormWrapper.animated{
+            background-image: repeating-linear-gradient(-45deg, #3c424f, #3c424f 10px, #f5f5f5 10px, #f5f5f5 20px);
+                -webkit-animation:progress 2s linear infinite;
+                -moz-animation:progress 2s linear infinite;
+                -ms-animation:progress 2s linear infinite;
+            animation:progress 2s linear infinite;
+            background-size: 150% 100%;
+        }
+        #myCustomForm{
+            padding-top: 15px;
+            padding-bottom: 15px;
+            background-color: white;
+            /*font-family: "Lucida Console", Monaco, monospace;*/
+
+        }
+        #paymentButton.not-disabled{
+            background-color: #3c424f;
+            border-color: #01db00;
+        }
+
+        @-webkit-keyframes progress{
+          0% {
+            background-position: 0 0;
+          }
+          100% {
+            background-position: -75px 0px;
+          }
+        }
+        @-moz-keyframes progress{
+          0% {
+            background-position: 0 0;
+          }
+          100% {
+            background-position: -75px 0px;
+          }
+        }
+        @keyframes progress{
+          0% {
+            background-position: 0 0;
+          }
+          100% {
+            background-position: -70px 0px;
+          }
+        }
+    </style>
+
+<div class="wrapper text-center">
+        <h1>JS-Only</h1>
+    </div>
+    <pre><code>    PayJS(['jquery', 'PayJS/Core', 'PayJS/Request', 'PayJS/Response', 'PayJS/Formatting', 'PayJS/Validation'],
+        function($, $CORE, $REQUEST, $RESPONSE, $FORMATTING, $VALIDATION) {
+            $CORE.Initialize({
+                <i>(...)</i>
+            });
+            $("#paymentButton").click(function() {
+                $REQUEST.doPayment(cc, exp, cvv, function(resp) {
+                    $RESPONSE.tryParse(resp);
+                    var isApproved = $RESPONSE.getTransactionSuccess();
+                    <i>(...)</i>
+                })
+            });
+            $("#cc_number").blur(function() {
+                var cc = $("#cc_number").val();
+                cc = $FORMATTING.formatCardNumberInput(cc, '-');
+                $("#cc_number").val(cc);
+                if ($VALIDATION.isValidCreditCard(cc, cc[0])) {
+                    <i>(...)</i>
+                }
+            })
+            <i>(...)</i>
+        });</code></pre>
+      </div>
+<div class="wrapper text-center">
+
+    <script type="text/javascript" src="/CatalystScripts/ValidationFunctions.js?vs=b2272.r506604-phase1"></script>
+    <form class="form" id="myCustomForm" name="catwebformform22149" method="post" onsubmit="return checkWholeForm22149(this)" enctype="multipart/form-data" action="https://mpmca.worldsecuresystems.com/FormProcessv2.aspx?WebFormID=166596&amp;OID={module_oid}&amp;OTYPE={module_otype}&amp;EID={module_eid}&amp;CID={module_cid}&amp;CC={module_urlcountrycode}&amp;Referrer={module_siteurl,true,true}">
+      <div class="row">
+        <div class="large-6 columns">
+          <h1>Contact Information</h1>
+        </div>
+        <div class="large-6 columns">
+          <div>
+            <label for="FirstName">First Name <span class="req">*</span> </label>
+            <br />
+            <input type="text" name="FirstName" id="FirstName" class="cat_textbox" maxlength="255">
+          </div>
+          <div>
+            <label for="LastName">Last Name <span class="req">*</span> </label>
+            <br />
+            <input type="text" name="LastName" id="LastName" class="cat_textbox" maxlength="255">
+          </div>
+          <div>
+            <label for="Company">Company</label>
+            <br />
+            <input type="text" name="Company" id="Company" class="cat_textbox" maxlength="255">
+          </div>
+          <div>
+            <label for="EmailAddress">Email Address <span class="req">*</span> </label>
+            <br />
+            <input type="text" name="EmailAddress" id="EmailAddress" class="cat_textbox" maxlength="255">
+          </div>
+          <div>
+            <label for="WorkPhone">Work Phone Number</label>
+            <br />
+            <input type="text" name="WorkPhone" id="WorkPhone" class="cat_textbox" maxlength="255">
+          </div>
+        </div>
+      </div>
+
+       <div class="row">
+        <div class="large-6 columns">
+          <h1>Billing Address</h1>
+        </div>
+        <div class="large-6 columns">
+
+      <div class="form-group billing" id="address-group">
+        <label class="control-label" for="BillingAddress">Billing Address</label>
+        <br />
+        <input type="text" name="BillingAddress" id="billing_street" class="cat_textbox form-control" value="" placeholder="" maxlength="500"> <!--id="BillingAddress"-->
+        <span class="help-block"></span>
+      </div>
+      <div class="form-group billing" id="city-group">
+        <label class="control-label" for="BillingCity">City</label>
+        <br />
+        <input type="text" name="BillingCity" id="billing_city" class="cat_textbox form-control" value="" placeholder="" maxlength="255"> <!--id="BillingCity"-->
+        <span class="help-block"></span>
+      </div>
+      <div class="form-group billing" id="state-group">
+        <label class="control-label" for="BillingState">State</label>
+        <br />
+        <input type="text" name="BillingState" class="cat_textbox form-control" id="billing_state" value="" placeholder="" maxlength="255"> <!--id="BillingState"-->
+        <span class="help-block"></span>
+      </div>
+      <div class="form-group billing" id="zip-group">
+        <label class="control-label" for="BillingZip">Zipcode/Postcode</label>
+        <br />
+        <input type="text" name="BillingZip" class="cat_textbox form-control" id="billing_zip" value="" placeholder="" maxlength="255"> <!--id="BillingZip"-->
+        <span class="help-block"></span>
+      </div>
+      <div>
+        <label for="BillingCountry">Country</label>
+        <br />
+        <select name="BillingCountry" id="BillingCountry" class="cat_dropdown">
+          <option value=" ">-- Select Country --</option>
+          <option value="US" selected="selected">UNITED STATES</option>
+        </select>
+      </div>
+      </div>
+      </div>
+
+       <div class="row">
+        <div class="large-6 columns">
+          <h1>Payment Information</h1>
+        </div>
+        <div class="large-6 columns">
+
+
+      <div class="form-group billing" id="name-group">
+        <label class="control-label" for="CardName">Name on Card <span class="req">*</span> </label>
+        <br />
+        <input type="text" name="CardName" id="billing_name" class="cat_textbox form-control" autocomplete="off" value="" placeholder=""> <!--id="CardName"-->
+        <span class="help-block"></span>
+      </div>
+      <div class="form-group cc" id="cc-group">
+        <label class="control-label" for="CardNumber">Card Number <span class="req">*</span> </label>
+        <br />
+        <input type="text" name="CardNumber" class="cat_textbox form-control" id="cc_number" value="" placeholder="" autocomplete="off"> <!--id="CardNumber"-->
+        <span class="help-block"></span>
+      </div>
+      <div class="form-group cc" id="exp-group">
+                <label name="CardExpiryMonth" class="control-label">Card Expiry <span class="req">*</span> </label>
+                <input type="text" class="form-control" id="cc_expiration" value="" placeholder="">
+                <span class="help-block"></span>
             </div>
-          </div>
+      <!--<div class="form-group cc" id="exp-group">
+        <label class="control-label">Card Expiry <span class="req">*</span> </label>
+        <br />
+        <select name="CardExpiryMonth" id="cc_expiration" class="cat_dropdown_smaller form-control"> id="CardExpiryMonth"
+          <option value="01">01</option>
+          <option value="02">02</option>
+          <option value="03">03</option>
+          <option value="04">04</option>
+          <option value="05">05</option>
+          <option value="06">06</option>
+          <option value="07">07</option>
+          <option value="08">08</option>
+          <option value="09">09</option>
+          <option value="10">10</option>
+          <option value="11">11</option>
+          <option value="12">12</option>
+        </select>
+        <select name="CardExpiryYear" id="cc_expiration" class="cat_dropdown_smaller form-control"> id="CardExpiryYear"
+          <option value="2015">2015</option>
+          <option value="2016">2016</option>
+          <option value="2017">2017</option>
+          <option value="2018">2018</option>
+          <option value="2019">2019</option>
+          <option value="2020">2020</option>
+          <option value="2021">2021</option>
+          <option value="2022">2022</option>
+          <option value="2023">2023</option>
+        </select>
+        <span class="help-block"></span>
+      </div>-->
+      <div>
+        <label for="CardType">Card Type <span class="req">*</span> </label>
+        <br />
+        <select name="CardType" id="CardType" class="cat_dropdown">
+          <option value="1">Visa</option>
+          <option value="2">Mastercard</option>
+          <option value="3">Bank Card</option>
+          <option value="4">American Express</option>
+          <option value="5">Diners Club</option>
+          <option value="6">JCB</option>
+        </select>
+      </div>
+      <div class="form-group cc" id="cvv-group">
+        <label class="control-label" for="CardCCV">CCV Number <span class="req">*</span> </label>
+        <br />
+        <input type="text" name="CardCCV" class="cat_textbox form-control" id="cc_cvv" value="" placeholder="" autocomplete="off"> <!--id="CardCCV"-->
+        <span class="help-block"></span>
+      </div>
+      </div>
+      </div>
+      <div>
+        <input class="cat_button btn btn-primary" type="submit" value="Submit" id="paymentButton"> <!--id="catwebformbutton"-->
+        <div id="paymentResponse" class="alert alert-success" role="alert"></div>
+      </div>
 
-           <div class="row">
-            <div class="large-6 columns">
-              <h1>Billing Address</h1>
-            </div>
-            <div class="large-6 columns">
-          <div>
-            <label for="BillingAddress">Billing Address</label>
-            <br />
-            <input type="text" name="BillingAddress" id="BillingAddress" class="cat_textbox" maxlength="500">
-          </div>
-          <div>
-            <label for="BillingCity">City</label>
-            <br />
-            <input type="text" name="BillingCity" id="BillingCity" class="cat_textbox" maxlength="255">
-          </div>
-          <div>
-            <label for="BillingState">State</label>
-            <br />
-            <input type="text" name="BillingState" id="BillingState" class="cat_textbox" maxlength="255">
-          </div>
-          <div>
-            <label for="BillingZip">Zipcode/Postcode</label>
-            <br />
-            <input type="text" name="BillingZip" id="BillingZip" class="cat_textbox" maxlength="255">
-          </div>
-          <div>
-            <label for="BillingCountry">Country</label>
-            <br />
-            <select name="BillingCountry" id="BillingCountry" class="cat_dropdown">
-              <option value=" ">-- Select Country --</option>
-              <option value="US" selected="selected">UNITED STATES</option>
-            </select>
-          </div>
-          </div>
-          </div>
+      <script type="text/javascript">
+            //<![CDATA[
+            var submitcount22149 = 0;
 
-           <div class="row">
-            <div class="large-6 columns">
-              <h1>Payment Information</h1>
-            </div>
-            <div class="large-6 columns">
-          <div>
-            <label for="CardName">Name on Card <span class="req">*</span> </label>
-            <br />
-            <input type="text" name="CardName" id="CardName" class="cat_textbox" autocomplete="off">
-          </div>
-          <div>
-            <label for="CardNumber">Card Number <span class="req">*</span> </label>
-            <br />
-            <input type="text" name="CardNumber" id="CardNumber" class="cat_textbox" autocomplete="off">
-          </div>
-          <div>
-            <label>Card Expiry <span class="req">*</span> </label>
-            <br />
-            <select name="CardExpiryMonth" id="CardExpiryMonth" class="cat_dropdown_smaller">
-              <option value="01">01</option>
-              <option value="02">02</option>
-              <option value="03">03</option>
-              <option value="04">04</option>
-              <option value="05">05</option>
-              <option value="06">06</option>
-              <option value="07">07</option>
-              <option value="08">08</option>
-              <option value="09">09</option>
-              <option value="10">10</option>
-              <option value="11">11</option>
-              <option value="12">12</option>
-            </select>
-            <select name="CardExpiryYear" id="CardExpiryYear" class="cat_dropdown_smaller">
-              <option value="2015">2015</option>
-              <option value="2016">2016</option>
-              <option value="2017">2017</option>
-              <option value="2018">2018</option>
-              <option value="2019">2019</option>
-              <option value="2020">2020</option>
-              <option value="2021">2021</option>
-              <option value="2022">2022</option>
-              <option value="2023">2023</option>
-            </select>
-          </div>
-          <div>
-            <label for="CardType">Card Type <span class="req">*</span> </label>
-            <br />
-            <select name="CardType" id="CardType" class="cat_dropdown">
-              <option value="1">Visa</option>
-              <option value="2">Mastercard</option>
-              <option value="3">Bank Card</option>
-              <option value="4">American Express</option>
-              <option value="5">Diners Club</option>
-              <option value="6">JCB</option>
-            </select>
-          </div>
-          <div>
-            <label for="CardCCV">CCV Number <span class="req">*</span> </label>
-            <br />
-            <input type="text" name="CardCCV" id="CardCCV" class="cat_textbox" autocomplete="off">
-          </div>
-          </div>
-          </div>
-          <div>
-            <input class="cat_button" type="submit" value="Submit" id="catwebformbutton">
-          </div>
-
-          <script type="text/javascript">
-                //<![CDATA[
-                var submitcount22149 = 0;
-
-                function checkWholeForm22149(theForm) {
-                        var why = "";
-                        if (theForm.PaymentMethodType) why += checkSelected(theForm.PaymentMethodType, "Payment Method");
-                        if (!theForm.PaymentMethodType || getRadioSelected(theForm.PaymentMethodType) == 1) {
-                            if (theForm.CardName) why += isEmpty(theForm.CardName.value, "Name on Card");
-                            if (theForm.CardNumber) why += isNumeric(theForm.CardNumber.value, "Card Number");
-                            if (theForm.Amount) why += isCurrency(theForm.Amount.value, "Amount");
-                        }
-                        if (theForm.EmailAddress) why += checkEmail(theForm.EmailAddress.value);
-                        if (theForm.FirstName) why += isEmpty(theForm.FirstName.value, "First Name");
-                        if (theForm.LastName) why += isEmpty(theForm.LastName.value, "Last Name");
-                        if (why != "") {
-                            alert(why);
-                            return false;
-                        }
-                        if (submitcount22149 == 0) {
-                            submitcount22149++;
-                            theForm.submit();
-                            return false;
-                        } else {
-                            alert("Form submission is in progress.");
-                            return false;
-                        }
+            function checkWholeForm22149(theForm) {
+                    var why = "";
+                    if (theForm.PaymentMethodType) why += checkSelected(theForm.PaymentMethodType, "Payment Method");
+                    if (!theForm.PaymentMethodType || getRadioSelected(theForm.PaymentMethodType) == 1) {
+                        if (theForm.CardName) why += isEmpty(theForm.CardName.value, "Name on Card");
+                        if (theForm.CardNumber) why += isNumeric(theForm.CardNumber.value, "Card Number");
+                        if (theForm.Amount) why += isCurrency(theForm.Amount.value, "Amount");
                     }
-                    //]]>
-            </script>
-        </form>
+                    if (theForm.EmailAddress) why += checkEmail(theForm.EmailAddress.value);
+                    if (theForm.FirstName) why += isEmpty(theForm.FirstName.value, "First Name");
+                    if (theForm.LastName) why += isEmpty(theForm.LastName.value, "Last Name");
+                    if (why != "") {
+                        alert(why);
+                        return false;
+                    }
+                    if (submitcount22149 == 0) {
+                        submitcount22149++;
+                        theForm.submit();
+                        return false;
+                    } else {
+                        alert("Form submission is in progress.");
+                        return false;
+                    }
+                }
+                //]]>
+        </script>
+    </form>
+  </div>
 
-</body>
-</html>
+<br /><br /><br />
+<script type="text/javascript">
+    PayJS(['jquery', 'PayJS/Core', 'PayJS/Request', 'PayJS/Response', 'PayJS/Formatting', 'PayJS/Validation'],
+    function($, $CORE, $REQUEST, $RESPONSE, $FORMATTING, $VALIDATION) {
+
+        $("#paymentButton").prop('disabled', true);
+
+        var isValidCC = false,
+            isValidExp = false,
+            isValidCVV = false;
+
+        // when using REQUEST library, initialize via CORE instead of UI
+        $CORE.Initialize({
+            clientId: "<?php echo $developer['ID']; ?>",
+            postbackUrl: "<?php echo $req['postbackUrl']; ?>",
+            merchantId: "<?php echo $req['merchantId']; ?>",
+            authKey: "<?php echo $authKey; ?>",
+            salt: "<?php echo $req['salt']; ?>",
+            requestType: "<?php echo $req['requestType']; ?>",
+            orderNumber: "<?php echo $req['orderNumber']; ?>",
+            amount: "<?php echo $req['amount']; ?>",
+        });
+
+        $("#paymentButton").click(function() {
+            $(this).prop('disabled', true).removeClass("not-disabled");
+            $("#myCustomForm :input").prop('disabled', true);
+
+            $("#customFormWrapper").addClass("animated").removeClass("static");
+            $("#customFormWrapper").fadeTo(2000, 0.1);
+
+            // we'll add on the billing data that we collected
+            $CORE.setBilling({
+                name: $("#billing_name").val(),
+                address: $("#billing_street").val(),
+                city: $("#billing_city").val(),
+                state: $("#billing_state").val(),
+                postalCode: $("#billing_zip").val()
+            });
+
+            var cc = $("#cc_number").val();
+            var exp = $("#cc_expiration").val();
+            var cvv = $("#cc_cvv").val();
+
+            // run the payment
+            $REQUEST.doPayment(cc, exp, cvv, function(resp) {
+                // if you want to use the RESPONSE module with REQUEST, run the ajax response through tryParse...
+                $RESPONSE.tryParse(resp);
+                // ... which will initialize the RESPONSE module's getters
+                console.log($RESPONSE.getResponse());
+                $("#paymentResponse").text(
+                    $RESPONSE.getTransactionSuccess() ? "APPROVED" : "DECLINED"
+                )
+                $("#customFormWrapper").hide();
+                $("#paymentResponse").fadeTo(1000, 1);
+
+            })
+        })
+
+        $(".billing .form-control").blur(function(){
+            toggleClasses($(this).val().length > 0, $(this).parent());
+            checkForCompleteAndValidForm();
+        })
+
+        $("#cc_number").blur(function() {
+            var cc = $("#cc_number").val();
+            // we'll format the credit card number with dashes
+            cc = $FORMATTING.formatCardNumberInput(cc, '-');
+            $("#cc_number").val(cc);
+            // and then check it for validity
+            isValidCC = $VALIDATION.isValidCreditCard(cc);
+            toggleClasses(isValidCC, $("#cc-group"));
+            checkForCompleteAndValidForm();
+        })
+
+
+        $("#cc_expiration").blur(function() {
+            var exp = $("#cc_expiration").val();
+            exp = $FORMATTING.formatExpirationDateInput(exp, '/');
+            $("#cc_expiration").val(exp);
+            isValidExp = $VALIDATION.isValidExpirationDate(exp);
+            toggleClasses(isValidExp, $("#exp-group"));
+            checkForCompleteAndValidForm();
+        })
+
+        $("#cc_cvv").blur(function() {
+            var cvv = $("#cc_cvv").val();
+            cvv = cvv.replace(/\D/g,'');
+            $("#cc_cvv").val(cvv);
+            isValidCVV = $VALIDATION.isValidCvv(cvv, $("#cc_number").val()[0]);
+            toggleClasses(isValidCVV, $("#cvv-group"));
+            checkForCompleteAndValidForm();
+        })
+
+        function toggleClasses(isValid, obj) {
+            if (isValid) {
+                obj.addClass("has-success").removeClass("has-error");
+                obj.children(".help-block").text("Valid");
+            } else {
+                obj.removeClass("has-success").addClass("has-error");
+                obj.children(".help-block").text("Invalid");
+            }
+        }
+
+        function checkForCompleteAndValidForm() {
+            var isValidBilling = true;
+            $.each($(".billing"), function(){ isValidBilling = isValidBilling && $(this).hasClass("has-success") });
+
+            // assuming most people fill out the form from top-to-bottom,
+            // checking it from bottom-to-top takes advantage of short-circuiting
+            if (isValidCVV && isValidExp && isValidCC && isValidBilling) {
+                $("#paymentButton").prop('disabled', false).addClass("not-disabled");
+            }
+        }
+    });
+</script>
+
+    <footer class="footer">
+        <div class="wrapper">
+            <a href="http://www.sage.com" class="logo-sage"><img src="shared/img/logo_sage_rev.png" alt="Sage" width="50" height="20"></a>
+            <ul>
+                <li>Copyright &copy; 2016</li>
+                <li><a href="#">Privacy Policy</a></li>
+                <li><a href="#">Contact Us</a></li>
+            </ul>
+        </div>
+    </footer>
+
+    <!-- Misc. -->
+    <script>
+        angular.module('PayJS_SamplesApp', ['ngRoute'])
+        .config(['$routeProvider', function($routeProvider) {
+            $routeProvider
+            .when('/', { templateUrl: 'home/index.html' })
+            .when('/modal', { templateUrl: 'modal/index.php' })
+            .when('/inline', { templateUrl: 'inline/index.php' })
+            .when('/js-only', { templateUrl: 'js-only/index.php' })
+            .when('/require', { templateUrl: 'require/index.php' })
+            .when('/dynamic', { templateUrl: 'dynamic/index.html' })
+            .when('/adaptive', { templateUrl: 'adaptive/index.php' })
+            .when('/vault', { templateUrl: 'vault/index.php' })
+            .when('/response', { templateUrl: 'response/index.php' })
+            .otherwise({ redirectTo: '/' });
+        }]);
+    </script>
+    <script type="text/javascript">
+        $(".menu-item").click(function() {
+            $(".menu-item").removeClass("active");
+            $(this).addClass("active");
+        })
+    </script>
+    <script type="text/javascript">
+        (function() {
+            affixFooter(); // initialize footer fix if no scrollbar
+            $(window).resize(affixFooter);
+
+            function affixFooter() {
+                $('.footer').removeClass('affix-bottom').addClass(function() {
+                    if (window.innerHeight >= $('body').outerHeight(true)) return 'affix-bottom';
+                });
+            }
+        }).call(this);
+    </script>
 </body>
 </html>
